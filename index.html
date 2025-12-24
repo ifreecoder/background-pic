@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史人物故事动态照片展示器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #e6e6e6;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, #16213e 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, #0f3460 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .header {
+            padding: 15px 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo i {
+            color: #e6b17e;
+            font-size: 28px;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #e6b17e, #d4a373);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background-color: rgba(214, 162, 114, 0.2);
+            border: 1px solid rgba(214, 162, 114, 0.4);
+            color: #e6b17e;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .control-btn:hover {
+            background-color: rgba(214, 162, 114, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            overflow-y: auto;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        body.fullscreen .header,
+        body.fullscreen .sidebar,
+        body.fullscreen .footer,
+        body.fullscreen .info-panel {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        body.fullscreen .display-area {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .fullscreen-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+            gap: 10px;
+        }
+
+        body.fullscreen .fullscreen-controls {
+            display: flex;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+
+        body.fullscreen:hover .fullscreen-controls {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .fullscreen-btn-mini {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #e6b17e;
+            border: 1px solid rgba(214, 162, 114, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+
+        .fullscreen-btn-mini:hover {
+            background-color: rgba(214, 162, 114, 0.3);
+            transform: scale(1.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            color: #d4a373;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(212, 163, 115, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            font-size: 14px;
+        }
+
+        .file-input-container {
+            position: relative;
+        }
+
+        #fileInput {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 14px;
+            background-color: rgba(22, 33, 62, 0.7);
+            border: 2px dashed rgba(214, 162, 114, 0.5);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #b8b8b8;
+        }
+
+        .file-input-label:hover {
+            background-color: rgba(30, 44, 82, 0.7);
+            border-color: rgba(214, 162, 114, 0.8);
+        }
+
+        .file-input-label i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #e6b17e;
+            display: block;
+        }
+
+        .animation-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .animation-option {
+            padding: 10px 8px;
+            background-color: rgba(22, 33, 62, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .animation-option:hover {
+            background-color: rgba(30, 44, 82, 0.7);
+        }
+
+        .animation-option.selected {
+            background-color: rgba(214, 162, 114, 0.3);
+            border-color: #e6b17e;
+            color: #e6b17e;
+            box-shadow: 0 0 10px rgba(230, 177, 126, 0.3);
+        }
+
+        .random-option {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(214, 162, 114, 0.2), rgba(230, 177, 126, 0.1));
+            border: 2px solid rgba(230, 177, 126, 0.5);
+        }
+
+        .random-option.selected {
+            background: linear-gradient(135deg, rgba(214, 162, 114, 0.4), rgba(230, 177, 126, 0.2));
+            border-color: #e6b17e;
+        }
+
+        .slider-container {
+            padding: 0 5px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .slider-value {
+            color: #e6b17e;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background-color: rgba(22, 33, 62, 0.9);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #e6b17e;
+            cursor: pointer;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(22, 33, 62, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-container:hover {
+            background-color: rgba(30, 44, 82, 0.3);
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #e6b17e;
+        }
+
+        .checkbox-container span {
+            color: #e6e6e6;
+            font-size: 14px;
+        }
+
+        .image-list {
+            flex: 1;
+            overflow-y: auto;
+            background-color: rgba(22, 33, 62, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .image-list-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            margin-bottom: 8px;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .image-list-item:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .image-list-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 3px;
+            margin-right: 12px;
+        }
+
+        .image-list-item .name {
+            flex: 1;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .image-list-item .remove-btn {
+            color: #ff6b6b;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .image-list-item .remove-btn:hover {
+            background-color: rgba(255, 107, 107, 0.2);
+        }
+
+        .display-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background-color: #0d0d1a;
+        }
+
+        .photo-frame {
+            position: relative;
+            width: 95%;
+            height: 95%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo {
+            position: absolute;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            opacity: 0;
+            transition: none;
+        }
+
+        .photo.active {
+            opacity: 1;
+        }
+
+        .fade {
+            animation: fadeIn 4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .slide-left {
+            animation: slideLeft 4s ease-out;
+        }
+
+        @keyframes slideLeft {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        .slide-right {
+            animation: slideRight 4s ease-out;
+        }
+
+        @keyframes slideRight {
+            0% { transform: translateX(-100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        .slide-top {
+            animation: slideTop 4s ease-out;
+        }
+
+        @keyframes slideTop {
+            0% { transform: translateY(100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .slide-bottom {
+            animation: slideBottom 4s ease-out;
+        }
+
+        @keyframes slideBottom {
+            0% { transform: translateY(-100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .zoom-in {
+            animation: zoomIn 5s ease-out;
+        }
+
+        @keyframes zoomIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .zoom-out {
+            animation: zoomOut 5s ease-out;
+        }
+
+        @keyframes zoomOut {
+            0% { transform: scale(1.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .rotate-in {
+            animation: rotateIn 5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes rotateIn {
+            0% { transform: rotate(-180deg) scale(0.3); opacity: 0; }
+            100% { transform: rotate(0deg) scale(1); opacity: 1; }
+        }
+
+        .rotate-out {
+            animation: rotateOut 5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes rotateOut {
+            0% { transform: rotate(180deg) scale(0.3); opacity: 0; }
+            100% { transform: rotate(0deg) scale(1); opacity: 1; }
+        }
+
+        .bounce {
+            animation: bounce 4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .elastic {
+            animation: elastic 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes elastic {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .blur-in {
+            animation: blurIn 4s ease-out;
+        }
+
+        @keyframes blurIn {
+            0% { filter: blur(20px); opacity: 0; transform: scale(1.1); }
+            100% { filter: blur(0); opacity: 1; transform: scale(1); }
+        }
+
+        .flip-horizontal {
+            animation: flipHorizontal 5s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+        }
+
+        @keyframes flipHorizontal {
+            0% { transform: perspective(1000px) rotateY(-90deg); opacity: 0; }
+            100% { transform: perspective(1000px) rotateY(0deg); opacity: 1; }
+        }
+
+        .flip-vertical {
+            animation: flipVertical 5s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+        }
+
+        @keyframes flipVertical {
+            0% { transform: perspective(1000px) rotateX(-90deg); opacity: 0; }
+            100% { transform: perspective(1000px) rotateX(0deg); opacity: 1; }
+        }
+
+        .spin-in {
+            animation: spinIn 4s ease-out;
+        }
+
+        @keyframes spinIn {
+            0% { transform: rotate(-720deg) scale(0); opacity: 0; }
+            100% { transform: rotate(0deg) scale(1); opacity: 1; }
+        }
+
+        .ripple {
+            animation: ripple 4s ease-out;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.2); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .rotate-3d {
+            animation: rotate3d 5s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+        }
+
+        @keyframes rotate3d {
+            0% { transform: perspective(1500px) rotate3d(1, 1, 1, 360deg) scale(0.5); opacity: 0; }
+            100% { transform: perspective(1500px) rotate3d(0, 0, 0, 0deg) scale(1); opacity: 1; }
+        }
+
+        .diagonal {
+            animation: diagonal 4s ease-out;
+        }
+
+        @keyframes diagonal {
+            0% { transform: translate(100%, 100%) scale(0.5); opacity: 0; }
+            100% { transform: translate(0, 0) scale(1); opacity: 1; }
+        }
+
+        .blind {
+            animation: blind 4s ease-out;
+        }
+
+        @keyframes blind {
+            0% { clip-path: inset(0 0 100% 0); opacity: 0; }
+            100% { clip-path: inset(0 0 0% 0); opacity: 1; }
+        }
+
+        .circle-expand {
+            animation: circleExpand 4s ease-out;
+        }
+
+        @keyframes circleExpand {
+            0% { clip-path: circle(0% at 50% 50%); opacity: 0; }
+            100% { clip-path: circle(100% at 50% 50%); opacity: 1; }
+        }
+
+        .parchment {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .parchment::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 95%, rgba(255,255,255,0.05) 100%),
+                        radial-gradient(ellipse at 30% 30%, rgba(230, 177, 126, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 70%, rgba(212, 163, 115, 0.1) 0%, transparent 50%);
+            z-index: 1;
+            pointer-events: none;
+            animation: parchmentEffect 4s ease-out;
+        }
+
+        @keyframes parchmentEffect {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .book-page {
+            animation: pageTurn 5s ease-in-out;
+        }
+
+        @keyframes pageTurn {
+            0% { transform: rotateY(-90deg); opacity: 0; }
+            100% { transform: rotateY(0deg); opacity: 1; }
+        }
+
+        .vintage {
+            filter: sepia(0.4) contrast(1.1) brightness(0.95);
+            animation: vintageEffect 4s ease-out;
+        }
+
+        @keyframes vintageEffect {
+            0% { filter: sepia(0.8) contrast(1.3) brightness(0.8); opacity: 0; }
+            100% { filter: sepia(0.4) contrast(1.1) brightness(0.95); opacity: 1; }
+        }
+
+        .zoom-rotate {
+            animation: zoomRotate 5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes zoomRotate {
+            0% { transform: scale(0.3) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .slide-fade {
+            animation: slideFade 4s ease-out;
+        }
+
+        @keyframes slideFade {
+            0% { transform: translateX(-50%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        .zoom-blur {
+            animation: zoomBlur 5s ease-out;
+        }
+
+        @keyframes zoomBlur {
+            0% { transform: scale(0.5); filter: blur(10px); opacity: 0; }
+            100% { transform: scale(1); filter: blur(0); opacity: 1; }
+        }
+
+        .neon {
+            animation: neonEffect 4s ease-out;
+        }
+
+        @keyframes neonEffect {
+            0% { 
+                filter: brightness(0) drop-shadow(0 0 20px rgba(230, 177, 126, 0.8));
+                opacity: 0; 
+            }
+            100% { 
+                filter: brightness(1) drop-shadow(0 0 10px rgba(230, 177, 126, 0.3));
+                opacity: 1; 
+            }
+        }
+
+        .speed-zoom {
+            animation: speedZoom 4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes speedZoom {
+            0% { transform: scale(2) translateX(-30%); opacity: 0; }
+            100% { transform: scale(1) translateX(0); opacity: 1; }
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 5;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            margin: 0 30px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(214, 162, 114, 0.3);
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .info-panel h3 {
+            color: #e6b17e;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .info-panel p {
+            font-size: 14px;
+            color: #cccccc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .footer {
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
+            color: #777;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 300px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-history"></i>
+            <h1>历史人物故事动态展示器</h1>
+        </div>
+        <div class="controls">
+            <button id="startBtn" class="control-btn">
+                <i class="fas fa-play"></i> 开始播放
+            </button>
+            <button id="pauseBtn" class="control-btn">
+                <i class="fas fa-pause"></i> 暂停
+            </button>
+            <button id="prevBtn" class="control-btn">
+                <i class="fas fa-backward"></i> 上一张
+            </button>
+            <button id="nextBtn" class="control-btn">
+                <i class="fas fa-forward"></i> 下一张
+            </button>
+            <button id="clearBtn" class="control-btn">
+                <i class="fas fa-trash"></i> 清空图片
+            </button>
+            <button id="fullscreenBtn" class="control-btn">
+                <i class="fas fa-expand"></i> 全屏显示
+            </button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-images"></i>
+                    <span>上传历史图片</span>
+                </div>
+                <div class="file-input-container">
+                    <input type="file" id="fileInput" accept="image/*" multiple>
+                    <label for="fileInput" class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        点击选择图片（支持多选）<br>
+                        <span style="font-size: 12px;">建议尺寸：1920×1080 或更大</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-film"></i>
+                    <span>选择动画效果</span>
+                </div>
+                <div class="animation-selection">
+                    <div class="animation-option random-option selected" data-animation="random">
+                        <i class="fas fa-random" style="margin-right: 5px;"></i>随机动画（推荐）
+                    </div>
+                    <div class="animation-option" data-animation="fade">淡入淡出</div>
+                    <div class="animation-option" data-animation="slide-left">从左滑入</div>
+                    <div class="animation-option" data-animation="slide-right">从右滑入</div>
+                    <div class="animation-option" data-animation="slide-top">从上滑入</div>
+                    <div class="animation-option" data-animation="slide-bottom">从下滑入</div>
+                    <div class="animation-option" data-animation="zoom-in">聚焦放大</div>
+                    <div class="animation-option" data-animation="zoom-out">全景展现</div>
+                    <div class="animation-option" data-animation="rotate-in">旋转入场</div>
+                    <div class="animation-option" data-animation="bounce">弹跳效果</div>
+                    <div class="animation-option" data-animation="elastic">弹簧效果</div>
+                    <div class="animation-option" data-animation="blur-in">模糊显现</div>
+                    <div class="animation-option" data-animation="flip-horizontal">水平翻转</div>
+                    <div class="animation-option" data-animation="flip-vertical">垂直翻转</div>
+                    <div class="animation-option" data-animation="spin-in">旋转入场</div>
+                    <div class="animation-option" data-animation="ripple">波纹扩散</div>
+                    <div class="animation-option" data-animation="rotate-3d">3D旋转</div>
+                    <div class="animation-option" data-animation="diagonal">对角线滑动</div>
+                    <div class="animation-option" data-animation="blind">百叶窗</div>
+                    <div class="animation-option" data-animation="circle-expand">圆形展开</div>
+                    <div class="animation-option" data-animation="parchment">羊皮纸</div>
+                    <div class="animation-option" data-animation="book-page">翻页效果</div>
+                    <div class="animation-option" data-animation="vintage">复古效果</div>
+                    <div class="animation-option" data-animation="zoom-rotate">缩放+旋转</div>
+                    <div class="animation-option" data-animation="slide-fade">滑动+淡入</div>
+                    <div class="animation-option" data-animation="zoom-blur">缩放+模糊</div>
+                    <div class="animation-option" data-animation="neon">霓虹光效</div>
+                    <div class="animation-option" data-animation="speed-zoom">极速划过</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>播放设置</span>
+                </div>
+                <div class="checkbox-container" id="shuffleContainer">
+                    <input type="checkbox" id="shuffleCheckbox">
+                    <span>随机打乱顺序</span>
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>切换速度</span>
+                        <span class="slider-value" id="speedValue">5 秒</span>
+                    </div>
+                    <input type="range" min="3" max="15" value="5" class="slider" id="speedSlider">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>动画时长</span>
+                        <span class="slider-value" id="durationValue">4 秒</span>
+                    </div>
+                    <input type="range" min="2" max="8" value="4" class="slider" id="durationSlider">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    <span>图片列表</span>
+                </div>
+                <div class="image-list" id="imageList">
+                    <div class="empty-state" id="emptyState">
+                        <i class="fas fa-portrait"></i>
+                        <p>尚未添加图片</p>
+                        <p style="font-size: 12px; margin-top: 10px;">上传图片后，可以拖动调整顺序</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-area">
+            <div class="fullscreen-controls" id="fullscreenControls">
+                <button class="fullscreen-btn-mini" id="exitFullscreenBtn" title="退出全屏 (ESC)">
+                    <i class="fas fa-compress"></i>
+                </button>
+                <button class="fullscreen-btn-mini" id="fullscreenPlayPauseBtn" title="播放/暂停">
+                    <i class="fas fa-pause" id="fullscreenPlayPauseIcon"></i>
+                </button>
+                <button class="fullscreen-btn-mini" id="fullscreenPrevBtn" title="上一张">
+                    <i class="fas fa-backward"></i>
+                </button>
+                <button class="fullscreen-btn-mini" id="fullscreenNextBtn" title="下一张">
+                    <i class="fas fa-forward"></i>
+                </button>
+            </div>
+            
+            <div class="photo-frame">
+                <div class="photo-container" id="photoContainer">
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>历史人物故事展示</h3>
+                <p id="imageInfo">上传图片后，将在这里显示相关信息</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        历史人物故事动态展示器 | 专为历史短视频录制设计 | 支持自动循环播放和随机顺序
+    </div>
+
+    <script>
+        let images = [];
+        let originalImages = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let playInterval;
+        let currentAnimation = 'random';
+        let speed = 5000;
+        let duration = 4000;
+        let isShuffleEnabled = false;
+
+        const animations = [
+            'fade', 'slide-left', 'slide-right', 'slide-top', 'slide-bottom',
+            'zoom-in', 'zoom-out', 'rotate-in', 'bounce', 'elastic',
+            'blur-in', 'flip-horizontal', 'flip-vertical', 'spin-in',
+            'ripple', 'rotate-3d', 'diagonal', 'blind', 'circle-expand',
+            'parchment', 'book-page', 'vintage', 'zoom-rotate',
+            'slide-fade', 'zoom-blur', 'neon', 'speed-zoom'
+        ];
+
+        const fileInput = document.getElementById('fileInput');
+        const imageList = document.getElementById('imageList');
+        const emptyState = document.getElementById('emptyState');
+        const photoContainer = document.getElementById('photoContainer');
+        const imageInfo = document.getElementById('imageInfo');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const durationSlider = document.getElementById('durationSlider');
+        const speedValue = document.getElementById('speedValue');
+        const durationValue = document.getElementById('durationValue');
+        const animationOptions = document.querySelectorAll('.animation-option');
+        const shuffleCheckbox = document.getElementById('shuffleCheckbox');
+        const shuffleContainer = document.getElementById('shuffleContainer');
+
+        const fullscreenControls = document.getElementById('fullscreenControls');
+        const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+        const fullscreenPlayPauseBtn = document.getElementById('fullscreenPlayPauseBtn');
+        const fullscreenPlayPauseIcon = document.getElementById('fullscreenPlayPauseIcon');
+        const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
+        const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addExampleImages();
+            setupEventListeners();
+            updateImageList();
+            showCurrentImage();
+        });
+
+        function addExampleImages() {
+            const exampleImages = [
+                { name: "历史人物1.jpg", url: "https://images.unsplash.com/photo-1547234935-80c7145ec969?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
+                { name: "历史人物2.jpg", url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
+                { name: "历史场景.jpg", url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" }
+            ];
+            
+            exampleImages.forEach(img => {
+                originalImages.push({
+                    name: img.name,
+                    url: img.url,
+                    element: null
+                });
+                images.push({
+                    name: img.name,
+                    url: img.url,
+                    element: null
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            startBtn.addEventListener('click', startPlayback);
+            pauseBtn.addEventListener('click', pausePlayback);
+            prevBtn.addEventListener('click', showPrevImage);
+            nextBtn.addEventListener('click', showNextImage);
+            clearBtn.addEventListener('click', clearImages);
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+            
+            exitFullscreenBtn.addEventListener('click', toggleFullscreen);
+            fullscreenPlayPauseBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pausePlayback();
+                } else {
+                    startPlayback();
+                }
+            });
+            fullscreenPrevBtn.addEventListener('click', showPrevImage);
+            fullscreenNextBtn.addEventListener('click', showNextImage);
+            
+            speedSlider.addEventListener('input', updateSpeed);
+            durationSlider.addEventListener('input', updateDuration);
+            
+            animationOptions.forEach(option => {
+                option.addEventListener('click', selectAnimation);
+            });
+            
+            shuffleContainer.addEventListener('click', (e) => {
+                if (e.target !== shuffleCheckbox) {
+                    shuffleCheckbox.checked = !shuffleCheckbox.checked;
+                    toggleShuffle();
+                }
+            });
+            
+            shuffleCheckbox.addEventListener('change', toggleShuffle);
+            
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.match('image.*')) continue;
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const imageUrl = e.target.result;
+                    
+                    originalImages.push({
+                        name: file.name,
+                        url: imageUrl,
+                        element: null
+                    });
+                    images.push({
+                        name: file.name,
+                        url: imageUrl,
+                        element: null
+                    });
+                    
+                    updateImageList();
+                    
+                    if (images.length === 1) {
+                        showCurrentImage();
+                    }
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            fileInput.value = '';
+        }
+
+        function updateImageList() {
+            if (images.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            imageList.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                const item = document.createElement('div');
+                item.className = 'image-list-item';
+                item.draggable = true;
+                item.dataset.index = index;
+                
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+                
+                const img = document.createElement('img');
+                img.src = image.url;
+                img.alt = image.name;
+                
+                const nameSpan = document.createElement('div');
+                nameSpan.className = 'name';
+                nameSpan.textContent = image.name;
+                
+                const removeBtn = document.createElement('div');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeImage(index);
+                });
+                
+                item.appendChild(img);
+                item.appendChild(nameSpan);
+                item.appendChild(removeBtn);
+                imageList.appendChild(item);
+                
+                if (index === currentIndex) {
+                    item.style.backgroundColor = 'rgba(214, 162, 114, 0.3)';
+                    item.style.border = '1px solid rgba(214, 162, 114, 0.5)';
+                }
+            });
+        }
+
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            return false;
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            if (draggedItem !== this) {
+                const fromIndex = parseInt(draggedItem.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+                
+                [images[fromIndex], images[toIndex]] = [images[toIndex], images[fromIndex]];
+                
+                if (isShuffleEnabled) {
+                    [originalImages[fromIndex], originalImages[toIndex]] = [originalImages[toIndex], originalImages[fromIndex]];
+                }
+                
+                if (currentIndex === fromIndex) {
+                    currentIndex = toIndex;
+                } else if (currentIndex === toIndex) {
+                    currentIndex = fromIndex;
+                }
+                
+                updateImageList();
+                showCurrentImage();
+            }
+            
+            return false;
+        }
+
+        function handleDragEnd() {
+            this.style.opacity = '1';
+        }
+
+        function removeImage(index) {
+            images.splice(index, 1);
+            if (isShuffleEnabled) {
+                const originalIndex = originalImages.findIndex(img => img.url === images[index]?.url);
+                if (originalIndex > -1) {
+                    originalImages.splice(originalIndex, 1);
+                }
+            }
+            
+            if (currentIndex >= images.length) {
+                currentIndex = Math.max(0, images.length - 1);
+            }
+            
+            updateImageList();
+            showCurrentImage();
+        }
+
+        function clearImages() {
+            if (images.length === 0) return;
+            
+            if (confirm('确定要清空所有图片吗？')) {
+                images = [];
+                originalImages = [];
+                currentIndex = 0;
+                updateImageList();
+                photoContainer.innerHTML = '';
+                imageInfo.textContent = '上传图片后，将在这里显示相关信息';
+            }
+        }
+
+        function shuffleImages() {
+            const currentImage = images[currentIndex];
+            for (let i = images.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [images[i], images[j]] = [images[j], images[i]];
+            }
+            currentIndex = images.findIndex(img => img.url === currentImage.url);
+        }
+
+        function toggleShuffle() {
+            isShuffleEnabled = shuffleCheckbox.checked;
+            
+            if (isShuffleEnabled) {
+                shuffleImages();
+                shuffleContainer.style.backgroundColor = 'rgba(230, 177, 126, 0.3)';
+                shuffleContainer.style.border = '1px solid rgba(230, 177, 126, 0.5)';
+            } else {
+                images = [...originalImages];
+                currentIndex = 0;
+                shuffleContainer.style.backgroundColor = 'rgba(22, 33, 62, 0.3)';
+                shuffleContainer.style.border = 'none';
+            }
+            
+            updateImageList();
+            showCurrentImage();
+        }
+
+        function getRandomAnimation() {
+            return animations[Math.floor(Math.random() * animations.length)];
+        }
+
+        function showCurrentImage() {
+            if (images.length === 0) {
+                photoContainer.innerHTML = '<div class="empty-state"><i class="fas fa-portrait"></i><p>请上传图片开始展示</p></div>';
+                return;
+            }
+            
+            const image = images[currentIndex];
+            photoContainer.innerHTML = '';
+            
+            const imgElement = document.createElement('img');
+            
+            let animationClass = currentAnimation;
+            if (currentAnimation === 'random') {
+                animationClass = getRandomAnimation();
+            }
+            
+            imgElement.className = `photo active ${animationClass}`;
+            imgElement.src = image.url;
+            imgElement.alt = image.name;
+            
+            if (animationClass === 'parchment') {
+                const parchmentOverlay = document.createElement('div');
+                parchmentOverlay.className = 'parchment';
+                parchmentOverlay.appendChild(imgElement);
+                photoContainer.appendChild(parchmentOverlay);
+            } else {
+                photoContainer.appendChild(imgElement);
+            }
+            
+            imageInfo.textContent = `当前显示：${image.name} (${currentIndex + 1}/${images.length}) - 动画: ${animationClass}`;
+            updateImageList();
+        }
+
+        function showNextImage() {
+            if (images.length === 0) return;
+            
+            if (isShuffleEnabled) {
+                currentIndex = (currentIndex + 1) % images.length;
+            } else {
+                currentIndex = (currentIndex + 1) % images.length;
+            }
+            
+            showCurrentImage();
+        }
+
+        function showPrevImage() {
+            if (images.length === 0) return;
+            
+            if (isShuffleEnabled) {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+            } else {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+            }
+            
+            showCurrentImage();
+        }
+
+        function startPlayback() {
+            if (images.length === 0) {
+                alert('请先上传图片');
+                return;
+            }
+            
+            if (isPlaying) return;
+            
+            isPlaying = true;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            if (fullscreenPlayPauseIcon) {
+                fullscreenPlayPauseIcon.className = 'fas fa-pause';
+            }
+            
+            if (playInterval) clearInterval(playInterval);
+            playInterval = setInterval(showNextImage, speed);
+        }
+
+        function pausePlayback() {
+            if (!isPlaying) return;
+            
+            isPlaying = false;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            
+            if (fullscreenPlayPauseIcon) {
+                fullscreenPlayPauseIcon.className = 'fas fa-play';
+            }
+            
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        function selectAnimation(e) {
+            const selected = e.currentTarget;
+            
+            animationOptions.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            selected.classList.add('selected');
+            currentAnimation = selected.dataset.animation;
+            
+            if (images.length > 0) {
+                showCurrentImage();
+            }
+        }
+
+        function updateSpeed() {
+            speed = speedSlider.value * 1000;
+            speedValue.textContent = `${speedSlider.value} 秒`;
+            
+            if (isPlaying) {
+                pausePlayback();
+                startPlayback();
+            }
+        }
+
+        function updateDuration() {
+            duration = durationSlider.value * 1000;
+            durationValue.textContent = `${durationSlider.value} 秒`;
+            document.documentElement.style.setProperty('--animation-duration', `${duration}ms`);
+        }
+
+        function toggleFullscreen() {
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+            
+            if (!isFullscreen) {
+                const element = document.documentElement;
+                
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function handleFullscreenChange() {
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+            
+            if (isFullscreen) {
+                document.body.classList.add('fullscreen');
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> 退出全屏';
+            } else {
+                document.body.classList.remove('fullscreen');
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> 全屏显示';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    if (isPlaying) {
+                        pausePlayback();
+                    } else {
+                        startPlayback();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    showPrevImage();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    showNextImage();
+                    break;
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case 'Escape':
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
