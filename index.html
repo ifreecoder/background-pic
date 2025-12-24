@@ -982,10 +982,22 @@
         const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
 
         document.addEventListener('DOMContentLoaded', function() {
-            addExampleImages();
+            loadImagesFromStorage();
+            if (images.length === 0) {
+                addExampleImages();
+            }
             setupEventListeners();
             updateImageList();
             showCurrentImage();
+            // 初始化播放控制状态
+            pauseBtn.disabled = true;
+            if (fullscreenPlayPauseIcon) {
+                fullscreenPlayPauseIcon.className = 'fas fa-play';
+            }
+            // 默认启用随机打乱顺序
+            shuffleCheckbox.checked = true;
+            isShuffleEnabled = true;
+            toggleShuffle();
         });
 
         function addExampleImages() {
@@ -1054,16 +1066,16 @@
 
         function handleFileSelect(event) {
             const files = event.target.files;
-            
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 if (!file.type.match('image.*')) continue;
-                
+
                 const reader = new FileReader();
-                
+
                 reader.onload = function(e) {
                     const imageUrl = e.target.result;
-                    
+
                     originalImages.push({
                         name: file.name,
                         url: imageUrl,
@@ -1074,17 +1086,19 @@
                         url: imageUrl,
                         element: null
                     });
-                    
+
                     updateImageList();
-                    
+
                     if (images.length === 1) {
                         showCurrentImage();
                     }
+
+                    saveImagesToStorage();
                 };
-                
+
                 reader.readAsDataURL(file);
             }
-            
+
             fileInput.value = '';
         }
 
@@ -1200,11 +1214,13 @@
 
         function clearImages() {
             if (images.length === 0) return;
-            
+
             if (confirm('确定要清空所有图片吗？')) {
+                pausePlayback(); // 停止播放
                 images = [];
                 originalImages = [];
                 currentIndex = 0;
+                localStorage.removeItem('uploadedImages');
                 updateImageList();
                 photoContainer.innerHTML = '';
                 imageInfo.textContent = '上传图片后，将在这里显示相关信息';
@@ -1415,7 +1431,7 @@
 
         document.addEventListener('keydown', function(e) {
             if (e.target.tagName === 'INPUT') return;
-            
+
             switch(e.key) {
                 case ' ':
                     e.preventDefault();
@@ -1442,6 +1458,18 @@
                     break;
             }
         });
+
+        function saveImagesToStorage() {
+            localStorage.setItem('uploadedImages', JSON.stringify(originalImages));
+        }
+
+        function loadImagesFromStorage() {
+            const stored = localStorage.getItem('uploadedImages');
+            if (stored) {
+                originalImages = JSON.parse(stored);
+                images = [...originalImages];
+            }
+        }
     </script>
 </body>
 </html>
