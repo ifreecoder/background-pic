@@ -492,24 +492,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .rotate-in {
-            animation: rotateIn 5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes rotateIn {
-            0% { transform: rotate(-180deg) scale(0.3); opacity: 0; }
-            100% { transform: rotate(0deg) scale(1); opacity: 1; }
-        }
-
-        .rotate-out {
-            animation: rotateOut 5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes rotateOut {
-            0% { transform: rotate(180deg) scale(0.3); opacity: 0; }
-            100% { transform: rotate(0deg) scale(1); opacity: 1; }
-        }
-
         .bounce {
             animation: bounce 4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
@@ -557,32 +539,14 @@
             100% { transform: perspective(1000px) rotateX(0deg); opacity: 1; }
         }
 
-        .spin-in {
-            animation: spinIn 4s ease-out;
-        }
-
-        @keyframes spinIn {
-            0% { transform: rotate(-720deg) scale(0); opacity: 0; }
-            100% { transform: rotate(0deg) scale(1); opacity: 1; }
-        }
-
         .ripple {
             animation: ripple 4s ease-out;
         }
 
         @keyframes ripple {
             0% { transform: scale(0.2); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
-        }
-
-        .rotate-3d {
-            animation: rotate3d 5s cubic-bezier(0.455, 0.03, 0.515, 0.955);
-        }
-
-        @keyframes rotate3d {
-            0% { transform: perspective(1500px) rotate3d(1, 1, 1, 360deg) scale(0.5); opacity: 0; }
-            100% { transform: perspective(1500px) rotate3d(0, 0, 0, 0deg) scale(1); opacity: 1; }
         }
 
         .diagonal {
@@ -612,30 +576,6 @@
             100% { clip-path: circle(100% at 50% 50%); opacity: 1; }
         }
 
-        .parchment {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .parchment::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent 95%, rgba(255,255,255,0.05) 100%),
-                        radial-gradient(ellipse at 30% 30%, rgba(230, 177, 126, 0.1) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 70%, rgba(212, 163, 115, 0.1) 0%, transparent 50%);
-            z-index: 1;
-            pointer-events: none;
-            animation: parchmentEffect 4s ease-out;
-        }
-
-        @keyframes parchmentEffect {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
 
         .book-page {
             animation: pageTurn 5s ease-in-out;
@@ -647,13 +587,13 @@
         }
 
         .vintage {
-            filter: sepia(0.4) contrast(1.1) brightness(0.95);
+            filter: sepia(0.2) contrast(1.1) brightness(1);
             animation: vintageEffect 4s ease-out;
         }
 
         @keyframes vintageEffect {
-            0% { filter: sepia(0.8) contrast(1.3) brightness(0.8); opacity: 0; }
-            100% { filter: sepia(0.4) contrast(1.1) brightness(0.95); opacity: 1; }
+            0% { filter: sepia(0.4) contrast(1.2) brightness(0.9); opacity: 0; }
+            100% { filter: sepia(0.2) contrast(1.1) brightness(1); opacity: 1; }
         }
 
         .zoom-rotate {
@@ -689,7 +629,7 @@
 
         @keyframes neonEffect {
             0% { 
-                filter: brightness(0) drop-shadow(0 0 20px rgba(230, 177, 126, 0.8));
+                filter: brightness(1) drop-shadow(0 0 20px rgba(230, 177, 126, 0.8));
                 opacity: 0; 
             }
             100% { 
@@ -841,19 +781,15 @@
                     <div class="animation-option" data-animation="slide-bottom">从下滑入</div>
                     <div class="animation-option" data-animation="zoom-in">聚焦放大</div>
                     <div class="animation-option" data-animation="zoom-out">全景展现</div>
-                    <div class="animation-option" data-animation="rotate-in">旋转入场</div>
                     <div class="animation-option" data-animation="bounce">弹跳效果</div>
                     <div class="animation-option" data-animation="elastic">弹簧效果</div>
                     <div class="animation-option" data-animation="blur-in">模糊显现</div>
                     <div class="animation-option" data-animation="flip-horizontal">水平翻转</div>
                     <div class="animation-option" data-animation="flip-vertical">垂直翻转</div>
-                    <div class="animation-option" data-animation="spin-in">旋转入场</div>
                     <div class="animation-option" data-animation="ripple">波纹扩散</div>
-                    <div class="animation-option" data-animation="rotate-3d">3D旋转</div>
                     <div class="animation-option" data-animation="diagonal">对角线滑动</div>
                     <div class="animation-option" data-animation="blind">百叶窗</div>
                     <div class="animation-option" data-animation="circle-expand">圆形展开</div>
-                    <div class="animation-option" data-animation="parchment">羊皮纸</div>
                     <div class="animation-option" data-animation="book-page">翻页效果</div>
                     <div class="animation-option" data-animation="vintage">复古效果</div>
                     <div class="animation-option" data-animation="zoom-rotate">缩放+旋转</div>
@@ -949,10 +885,10 @@
 
         const animations = [
             'fade', 'slide-left', 'slide-right', 'slide-top', 'slide-bottom',
-            'zoom-in', 'zoom-out', 'rotate-in', 'bounce', 'elastic',
-            'blur-in', 'flip-horizontal', 'flip-vertical', 'spin-in',
-            'ripple', 'rotate-3d', 'diagonal', 'blind', 'circle-expand',
-            'parchment', 'book-page', 'vintage', 'zoom-rotate',
+            'zoom-in', 'zoom-out', 'bounce', 'elastic',
+            'blur-in', 'flip-horizontal', 'flip-vertical',
+            'ripple', 'diagonal', 'blind', 'circle-expand',
+            'book-page', 'vintage', 'zoom-rotate',
             'slide-fade', 'zoom-blur', 'neon', 'speed-zoom'
         ];
 
@@ -1279,14 +1215,7 @@
             imgElement.src = image.url;
             imgElement.alt = image.name;
             
-            if (animationClass === 'parchment') {
-                const parchmentOverlay = document.createElement('div');
-                parchmentOverlay.className = 'parchment';
-                parchmentOverlay.appendChild(imgElement);
-                photoContainer.appendChild(parchmentOverlay);
-            } else {
-                photoContainer.appendChild(imgElement);
-            }
+            photoContainer.appendChild(imgElement);
             
             imageInfo.textContent = `当前显示：${image.name} (${currentIndex + 1}/${images.length}) - 动画: ${animationClass}`;
             updateImageList();
